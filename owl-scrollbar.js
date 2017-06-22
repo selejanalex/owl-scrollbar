@@ -31,7 +31,15 @@
          */
         this._handlers = {
             'initialized.owl.carousel': $.proxy(function(e) {
-                this.draw();
+                if(e.namespace && !this._initialized) {
+                    this.initialize();
+                    this._initialized = true;
+                }
+            }, this),
+            'drag.owl.carousel' : $.proxy(function(e) {
+                if(e.namespace && this._initialized) {
+                    this.dragHandler(e);
+                }
             }, this)
         };
 
@@ -45,23 +53,80 @@
      * @public
      */
     Scroller.Defaults = {
-        scrollBar: false
+        scrollBar    : false,
+        scrollWrapId : "owl-carousel-scrollWrap",
+        scrollBarClass : "owl-carousel-scrollBar"
     };
 
 
+    /**
+     * Experimenting.
+     * @protected
+     */
     Scroller.prototype.initialize = function() {
-        // @todo
+        // @todo check if using nav.
+        var settings = this._core.settings,
+            element  = this.$element,
+            dragBar  = $("<div />"),
+            dragWrap = $("<div />", {
+                id: settings.scrollWrapId
+            });
+
+        // @todo remove style.
+        if(settings.scrollBar) {
+            dragBar
+                .css({position: "absolute", width : "100px", height: "10px", "background-color": "red"})
+                .addClass(settings.scrollBarClass)
+                .appendTo(dragWrap)
+                .on('mousedown', $.proxy(function(e) {
+                    this.barScroll(e);
+                }, this));
+
+            dragWrap.appendTo($(element));
+        }
+    };
+
+    /**
+     * Scroll bar drag handler.
+     * @param e
+     * @protected
+     */
+    Scroller.prototype.barScroll = function(e) {
+        var $dragging = null;
+        var canDrag   = true;
+        var el_w      = $(e.currentTarget).outerWidth();
+
+        // Experiments
+        $(e.currentTarget).on("mousemove", $.proxy(function(e) {
+            if(canDrag) {
+                if ($dragging) {
+                    $dragging.offset({
+                        left: e.pageX - el_w / 2
+                    });
+                }
+                $dragging = $(e.target);
+            }
+        }, this))
+        .on('mouseup', $.proxy(function(e) {
+            canDrag = false;
+        }, this));
+    };
+
+    Scroller.prototype.dragDirection = function() {
+
+    };
+
+    Scroller.prototype.dragSpeed = function() {
+
+    };
+
+    Scroller.prototype.dragHandler = function(e) {
+        console.log(e.currentTarget);
+        console.log(this._core.maximum(false));
+        console.log(this._core.current())
     };
 
     Scroller.prototype.destroy = function(){
-        // @todo
-    };
-
-    Scroller.prototype.draw = function() {
-        // @todo
-    };
-
-    Scroller.prototype.scroll = function() {
         // @todo
     };
 
